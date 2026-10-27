@@ -104,6 +104,67 @@
   footer { margin-top: 12px; font-size: 0.9rem; }
   footer a { color: #e04e00; }
 
+  .card button {
+    font: inherit;
+    font-size: 1.1rem;
+    margin: 8px 4px 0;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 999px;
+    background: #ff6a00;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #b34a00;
+  }
+  .card button:active { transform: translateY(3px); box-shadow: 0 1px 0 #b34a00; }
+
+  /* the bird cursor */
+  body.robbed, body.robbed * {
+    cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32'><text y='26' font-size='26'>🐦</text></svg>") 4 4, auto;
+  }
+
+  /* fake pop-up windows inside the page */
+  .win {
+    position: fixed;
+    width: 200px;
+    background: #fff4e6;
+    border: 2px solid #222;
+    border-radius: 10px;
+    box-shadow: 4px 6px 0 rgba(0,0,0,0.4);
+    overflow: hidden;
+    z-index: 5;
+    animation: pop 0.25s cubic-bezier(.2,1.6,.4,1);
+    font-size: 0.85rem;
+  }
+  .win .bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #ff6a00;
+    color: white;
+    padding: 4px 6px;
+    user-select: none;
+  }
+  .win .bar span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .win .bar button {
+    width: 20px;
+    height: 20px;
+    border: none;
+    border-radius: 50%;
+    background: #222;
+    color: white;
+    font-size: 0.8rem;
+    line-height: 20px;
+    padding: 0;
+  }
+  .win img { display: block; width: 100%; animation: puff 0.8s ease-in-out infinite; }
+  .win p { margin: 4px; text-align: center; }
+
+  @keyframes pop {
+    from { transform: scale(0); }
+    to { transform: scale(1); }
+  }
+
   @keyframes wiggle {
     0%, 100% { transform: rotate(-3deg); }
     50% { transform: rotate(3deg) scale(1.05); }
@@ -138,6 +199,8 @@
       <img src="robin.webp" alt="A very round, very angry robin">
       <p>He is round. He is angry. He is <b>always watching</b>.</p>
       <p id="counter"></p>
+      <button id="flock">🐦 Summon the flock</button>
+      <p class="tiny" style="margin-top:8px">(allow pop-ups for the full bird experience)</p>
     </div>
     <footer class="card" style="animation:none; margin-top:12px;">
       Find my other projects on my <a href="https://github.com/sidschoolcoderesearch">GitHub page</a>!
@@ -221,6 +284,61 @@
     escapeTries++;
   }
 
+  // --- fake pop-up windows of the bird ---
+  // Closing one makes two more appear, until there are too many and he gives up
+  const titles = ["HE IS ROUND", "bird.exe", "chirp.mp3", "not a virus (bird)", "round_boy.webp", "LOOK AT HIM", "error: too round"];
+  const winLines = ["hello.", "i am round.", "close me. i dare you.", "i have friends.", "chirp.", "he sees you."];
+  const maxWindows = 25;
+  let windowCount = 0;
+  let flockDone = false;
+
+  function pick(list) {
+    return list[Math.floor(Math.random() * list.length)];
+  }
+
+  function spawnWindow() {
+    if (flockDone || !document.body.classList.contains("robbed")) return;
+    if (windowCount >= maxWindows) {
+      flockDone = true;
+      showToast("ok fine. the flock is tired. 🐦💤");
+      setTimeout(() => {
+        document.querySelectorAll(".win").forEach((w) => w.remove());
+        windowCount = 0;
+        flockDone = false;
+      }, 1500);
+      return;
+    }
+    windowCount++;
+    const win = document.createElement("div");
+    win.className = "win";
+    win.style.left = Math.random() * Math.max(0, window.innerWidth - 200) + "px";
+    win.style.top = Math.random() * Math.max(0, window.innerHeight - 250) + "px";
+    win.innerHTML = `
+      <div class="bar"><span>${pick(titles)}</span><button aria-label="Close">×</button></div>
+      <img src="robin.webp" alt="A round robin">
+      <p>${pick(winLines)}</p>`;
+    win.querySelector("button").addEventListener("click", () => {
+      win.remove();
+      chirp();
+      spawnWindow();
+      setTimeout(spawnWindow, 150);
+    });
+    document.body.appendChild(win);
+  }
+
+  // Opens a real bird window (bird.html). Each bird window can open its own children.
+  // If the browser blocks pop-ups, fake windows appear inside the page instead.
+  document.getElementById("flock").addEventListener("click", () => {
+    chirp();
+    const x = Math.floor(Math.random() * (screen.availWidth - 300));
+    const y = Math.floor(Math.random() * (screen.availHeight - 300));
+    const popup = window.open("bird.html", "_blank", `popup,width=280,height=300,left=${x},top=${y}`);
+    if (!popup) {
+      showToast("pop-ups blocked 😤 the flock will live here instead");
+      for (let i = 0; i < 4; i++) setTimeout(spawnWindow, i * 250);
+    }
+  });
+
   goButton.addEventListener("click", robinRoll);
   closeButton.addEventListener("mouseenter", runAway);
   closeButton.addEventListener("touchstart", (e) => {
@@ -236,6 +354,8 @@
     }
     showToast(escapeMessages[escapeMessages.length - 1]);
     document.body.classList.remove("robbed");
+    document.querySelectorAll(".win").forEach((w) => w.remove());
+    windowCount = 0;
     // ...but he comes back
     setTimeout(() => {
       showToast("he's back.");

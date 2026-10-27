@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🐦 HE IS ROUND</title>
+<style>
+  body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #fff4e6;
+    font-family: "Comic Sans MS", "Comic Sans", "Chalkboard SE", cursive;
+    text-align: center;
+    overflow: hidden;
+  }
+  img {
+    width: 60vmin;
+    border-radius: 50%;
+    animation: puff 0.7s ease-in-out infinite;
+  }
+  p { margin: 8px; font-weight: bold; color: #e04e00; }
+  button {
+    font: inherit;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 999px;
+    background: #ff6a00;
+    color: white;
+    cursor: pointer;
+  }
+  @keyframes puff {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08, 1.12); }
+  }
+</style>
+</head>
+<body>
+  <img src="robin.webp" alt="A very round robin">
+  <p id="line">hello.</p>
+  <button id="more">click me for a baby bird 🐣</button>
+
+<script>
+  const lines = ["hello.", "i am round.", "i live here now.", "do not look away.", "chirp.", "i have brought friends."];
+  document.getElementById("line").textContent = lines[Math.floor(Math.random() * lines.length)];
+
+  // Which generation this bird is (the first window is 1, its children are 2, ...)
+  const generation = Number(new URLSearchParams(location.search).get("gen")) || 1;
+  document.title = "🐦 bird #" + generation + (generation > 1 ? " (child of #" + (generation - 1) + ")" : "");
+
+  // Clicking anywhere in this window opens one child bird window
+  // (browsers only allow one new window per click)
+  document.addEventListener("click", () => {
+    const x = Math.floor(Math.random() * (screen.availWidth - 300));
+    const y = Math.floor(Math.random() * (screen.availHeight - 300));
+    window.open("bird.html?gen=" + (generation + 1), "_blank", `popup,width=280,height=300,left=${x},top=${y}`);
+  });
+
+  // The window bounces around the screen (only works in real pop-up windows)
+  let dx = 6, dy = 4;
+  setInterval(() => {
+    try {
+      let x = window.screenX + dx;
+      let y = window.screenY + dy;
+      if (x < 0 || x + window.outerWidth > screen.availWidth) dx = -dx;
+      if (y < 0 || y + window.outerHeight > screen.availHeight) dy = -dy;
+      window.moveBy(dx, dy);
+    } catch (e) {
+      // browser said no, the bird stays put
+    }
+  }, 30);
+</script>
+</body>
+</html>
