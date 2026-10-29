@@ -182,8 +182,7 @@
   window.addEventListener("resize", handleFullscreenState, { passive: true });
   window.addEventListener("orientationchange", handleFullscreenState, { passive: true });
 
-  // The window bounces around the screen (only works in real pop-up windows)
-  let dx = 12, dy = 8;
+  let dx = 6, dy = 4;
   setInterval(() => {
     try {
       let x = window.screenX + dx;
@@ -194,7 +193,7 @@
     } catch (e) {
       // browser said no, the bird stays put
     }
-  }, 8);
+  }, 30);
 </script>
 </body>
 </html>
