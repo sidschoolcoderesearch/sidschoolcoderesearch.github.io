@@ -228,7 +228,7 @@
   // Things the bird says when you try to escape
   const escapeMessages = [
     "nope 🐦",
-    "the robin says no",
+    "the robin says no thankyou i want to stay",
     "you cannot escape the round one",
     "he is faster than you",
     "fine. FINE. close it then.",
@@ -420,9 +420,9 @@
     document.body.classList.remove("robbed");
     document.querySelectorAll(".win").forEach((w) => w.remove());
     windowCount = 0;
-    // ...but he comes back
+    // ...but the robin says no thankyou i want to stay
     setTimeout(() => {
-      showToast("the bird says no thankyou i want to stay.");
+      showToast("the robin says no thankyou i want to stay");
       robinRoll();
     }, 2500);
   });
