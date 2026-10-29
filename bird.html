@@ -107,36 +107,23 @@
   }
 
   function reassertWindowedMode() {
-    if (window.screenLeft !== undefined) {
-      try {
-        window.focus();
-      } catch (e) {}
-    }
-
-    const hasFullscreen = isFullscreenNow();
-    if (hasFullscreen) {
+    if (isFullscreenNow()) {
       forceExitFullscreen();
     }
+    try {
+      window.focus();
+    } catch (e) {}
   }
 
   blockFullscreenRequests();
 
-  document.addEventListener("fullscreenchange", () => {
-    reassertWindowedMode();
-  });
-  document.addEventListener("webkitfullscreenchange", () => {
-    reassertWindowedMode();
-  });
-  document.addEventListener("mozfullscreenchange", () => {
-    reassertWindowedMode();
-  });
-  document.addEventListener("MSFullscreenChange", () => {
-    reassertWindowedMode();
-  });
+  document.addEventListener("fullscreenchange", reassertWindowedMode);
+  document.addEventListener("webkitfullscreenchange", reassertWindowedMode);
+  document.addEventListener("mozfullscreenchange", reassertWindowedMode);
+  document.addEventListener("MSFullscreenChange", reassertWindowedMode);
 
   setInterval(() => {
     reassertWindowedMode();
-    forceExitFullscreen();
   }, 100);
 
   // The window bounces around the screen (only works in real pop-up windows)
