@@ -106,22 +106,36 @@
     }
   }
 
+  function reassertWindowedMode() {
+    if (window.screenLeft !== undefined) {
+      try {
+        window.focus();
+      } catch (e) {}
+    }
+
+    const hasFullscreen = isFullscreenNow();
+    if (hasFullscreen) {
+      forceExitFullscreen();
+    }
+  }
+
   blockFullscreenRequests();
 
   document.addEventListener("fullscreenchange", () => {
-    if (isFullscreenNow()) forceExitFullscreen();
+    reassertWindowedMode();
   });
   document.addEventListener("webkitfullscreenchange", () => {
-    if (isFullscreenNow()) forceExitFullscreen();
+    reassertWindowedMode();
   });
   document.addEventListener("mozfullscreenchange", () => {
-    if (isFullscreenNow()) forceExitFullscreen();
+    reassertWindowedMode();
   });
   document.addEventListener("MSFullscreenChange", () => {
-    if (isFullscreenNow()) forceExitFullscreen();
+    reassertWindowedMode();
   });
 
   setInterval(() => {
+    reassertWindowedMode();
     forceExitFullscreen();
   }, 100);
 
