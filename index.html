@@ -142,6 +142,36 @@
   .win img { display: block; width: 100%; animation: puff 0.8s ease-in-out infinite; }
   .win p { margin: 4px; text-align: center; }
 
+  /* the "bird has fallen" box */
+  #revenge {
+    display: none;
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    height: fit-content;
+    width: min(340px, calc(100% - 32px));
+    background: white;
+    border: 6px solid #e04e00;
+    border-radius: 20px;
+    padding: 16px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    z-index: 20;
+  }
+  #revenge.show { display: block; animation: slam 0.4s cubic-bezier(.2,1.6,.4,1); }
+  #revenge h2 { margin: 0 0 8px; color: #e04e00; }
+  #revenge p { margin: 0 0 12px; }
+  #revenge button {
+    font: inherit;
+    font-size: 1.2rem;
+    padding: 10px 36px;
+    border: none;
+    border-radius: 999px;
+    background: #ff6a00;
+    color: white;
+    box-shadow: 0 4px 0 #b34a00;
+  }
+
   @keyframes pop {
     from { transform: scale(0); }
     to { transform: scale(1); }
@@ -183,6 +213,12 @@
 
   <button id="close" aria-label="Close">×</button>
   <div id="toast"></div>
+
+  <div id="revenge">
+    <h2 id="revenge-title"></h2>
+    <p id="revenge-text"></p>
+    <button id="revenge-ok">OK</button>
+  </div>
 
 <script>
   const closeButton = document.getElementById("close");
@@ -301,15 +337,64 @@
 
   // Opens a real bird window (bird.html). Each bird window can open its own children.
   // If the browser blocks pop-ups, fake windows appear inside the page instead.
-  document.getElementById("flock").addEventListener("click", () => {
-    chirp();
+  function openBirdWindow() {
     const x = Math.floor(Math.random() * (screen.availWidth - 300));
     const y = Math.floor(Math.random() * (screen.availHeight - 300));
-    const popup = window.open("bird.html", "_blank", `popup,width=280,height=300,left=${x},top=${y}`);
+    return window.open("bird.html", "_blank", `popup,width=280,height=300,left=${x},top=${y}`);
+  }
+
+  document.getElementById("flock").addEventListener("click", () => {
+    chirp();
+    const popup = openBirdWindow();
     if (!popup) {
       showToast("pop-ups blocked 😤 the flock will live here instead");
       for (let i = 0; i < 4; i++) setTimeout(spawnWindow, i * 250);
     }
+  });
+
+  // --- when a bird window is closed, his cousins want revenge ---
+  // The OK button has to be clicked twice, then two new bird windows fly out
+  const revenge = document.getElementById("revenge");
+  const revengeTitle = document.getElementById("revenge-title");
+  const revengeText = document.getElementById("revenge-text");
+  const revengeOk = document.getElementById("revenge-ok");
+  let okClicks = 0;
+
+  // Each bird window says hello and holds a lock; we get the lock when it closes
+  new BroadcastChannel("birds").addEventListener("message", (event) => {
+    if (!event.data || !event.data.hello) return;
+    const generation = event.data.generation;
+    navigator.locks.request("bird-" + event.data.hello, () => birdFell(generation));
+  });
+
+  function birdFell(generation) {
+    timesRobbed++;
+    counter.textContent = "Apocalypse level: " + timesRobbed;
+    okClicks = 0;
+    revengeTitle.textContent = "bird #" + generation + " has fallen… 💀";
+    revengeText.textContent = "his cousins are coming for revenge 😤";
+    revengeOk.textContent = "OK";
+    revenge.classList.remove("show");
+    revenge.offsetHeight;
+    revenge.classList.add("show");
+    chirp();
+  }
+
+  revengeOk.addEventListener("click", () => {
+    okClicks++;
+    if (okClicks === 1) {
+      revengeText.textContent = "are you sure? he had a family.";
+      revengeOk.textContent = "OK (for real)";
+      return;
+    }
+    revenge.classList.remove("show");
+    chirp();
+    // Browsers usually allow only one new window per click,
+    // so if the second one is blocked, a fake bird window shows up instead
+    const first = openBirdWindow();
+    const second = openBirdWindow();
+    if (!first) spawnWindow();
+    if (!second) spawnWindow();
   });
 
   // The bird is there from the start

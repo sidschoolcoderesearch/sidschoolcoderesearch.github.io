@@ -51,6 +51,14 @@
   const generation = Number(new URLSearchParams(location.search).get("gen")) || 1;
   document.title = "🐦 bird #" + generation + (generation > 1 ? " (child of #" + (generation - 1) + ")" : "");
 
+  // This window holds a "lock" for as long as it's open. The browser lets go of
+  // the lock when the window closes, which is how the main page finds out.
+  const birdId = Math.random().toString(36).slice(2);
+  navigator.locks.request("bird-" + birdId, () => {
+    new BroadcastChannel("birds").postMessage({ hello: birdId, generation });
+    return new Promise(() => {}); // never finishes, so the lock is held until the window closes
+  });
+
   // Clicking anywhere in this window opens one child bird window
   // (browsers only allow one new window per click)
   document.addEventListener("click", () => {
