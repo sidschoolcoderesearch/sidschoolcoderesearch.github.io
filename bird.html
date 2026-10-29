@@ -87,6 +87,40 @@
     }
   }
 
+  function blockFullscreenRequests() {
+    const candidates = [
+      "requestFullscreen",
+      "webkitRequestFullscreen",
+      "mozRequestFullScreen",
+      "msRequestFullscreen"
+    ];
+
+    for (const name of candidates) {
+      const fn = Element.prototype[name];
+      if (typeof fn !== "function") continue;
+
+      Element.prototype[name] = function () {
+        forceExitFullscreen();
+        return Promise.resolve(this);
+      };
+    }
+  }
+
+  blockFullscreenRequests();
+
+  document.addEventListener("fullscreenchange", () => {
+    if (isFullscreenNow()) forceExitFullscreen();
+  });
+  document.addEventListener("webkitfullscreenchange", () => {
+    if (isFullscreenNow()) forceExitFullscreen();
+  });
+  document.addEventListener("mozfullscreenchange", () => {
+    if (isFullscreenNow()) forceExitFullscreen();
+  });
+  document.addEventListener("MSFullscreenChange", () => {
+    if (isFullscreenNow()) forceExitFullscreen();
+  });
+
   setInterval(() => {
     forceExitFullscreen();
   }, 100);
