@@ -64,124 +64,34 @@
       document.fullscreenElement ||
       document.webkitFullscreenElement ||
       document.mozFullScreenElement ||
+      document.msFullscreenElement ||
       window.matchMedia("(display-mode: fullscreen)").matches
     );
   }
 
-  function applyFullscreenTrap() {
+  function forceExitFullscreen() {
     if (!isFullscreenNow()) return;
 
-    const existing = document.getElementById("birdFullscreenMask");
-    if (existing) return;
+    const exitFn =
+      document.exitFullscreen ||
+      document.webkitExitFullscreen ||
+      document.mozCancelFullScreen ||
+      document.msExitFullscreen;
 
-    const mask = document.createElement("div");
-    mask.id = "birdFullscreenMask";
-    Object.assign(mask.style, {
-      position: "fixed",
-      inset: "0",
-      width: "100vw",
-      height: "100vh",
-      margin: "0",
-      padding: "0",
-      background: "#fff4e6",
-      zIndex: "2147483647",
-      overflow: "hidden",
-      pointerEvents: "auto",
-      boxSizing: "border-box"
-    });
-
-    mask.innerHTML = `
-      <div id="birdFullscreenLayer" style="
-        position:absolute;
-        inset:0;
-        width:100vw;
-        height:100vh;
-        background:#fff4e6;
-        overflow:hidden;
-      ">
-        <div id="birdFullscreenWindow" style="
-          position:absolute;
-          left:50px;
-          top:50px;
-          width:280px;
-          height:300px;
-          background:#fffaf2;
-          border:2px solid #222;
-          border-radius:12px;
-          box-shadow:0 12px 28px rgba(0,0,0,.28);
-          overflow:hidden;
-        ">
-          <div style="
-            height:28px;
-            background:#ff6a00;
-            color:white;
-            font-weight:bold;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            user-select:none;
-          ">🐦</div>
-          <img src="robin.webp" alt="A round robin" style="display:block; width:100%; height:calc(100% - 28px); object-fit:cover;">
-        </div>
-      </div>
-    `;
-
-    document.body.appendChild(mask);
-
-    let x = 50, y = 50;
-    let dx = 12, dy = 8;
-    const bird = document.getElementById("birdFullscreenWindow");
-
-    const tickBird = () => {
-      x += dx;
-      y += dy;
-
-      if (x <= 0 || x + 280 >= window.innerWidth) dx *= -1;
-      if (y <= 0 || y + 300 >= window.innerHeight) dy *= -1;
-
-      bird.style.left = x + "px";
-      bird.style.top = y + "px";
-    };
-
-    mask._interval = setInterval(tickBird, 16);
-
-    const blockKey = (e) => {
-      const blocked = ["Escape", "F11", "Alt", "Meta", "Control", "Tab"];
-      if (blocked.includes(e.key) || e.key === " ") {
-        e.preventDefault();
-        e.stopPropagation();
+    if (typeof exitFn === "function") {
+      try {
+        exitFn.call(document);
+      } catch (e) {
+        // browser refused; ignore
       }
-    };
-
-    mask._blockKeyDown = (e) => blockKey(e);
-    mask._blockKeyUp = (e) => blockKey(e);
-    document.addEventListener("keydown", mask._blockKeyDown, { capture: true });
-    document.addEventListener("keyup", mask._blockKeyUp, { capture: true });
-  }
-
-  function removeFullscreenTrap() {
-    const mask = document.getElementById("birdFullscreenMask");
-    if (!mask) return;
-    if (mask._interval) clearInterval(mask._interval);
-    if (mask._blockKeyDown) document.removeEventListener("keydown", mask._blockKeyDown, { capture: true });
-    if (mask._blockKeyUp) document.removeEventListener("keyup", mask._blockKeyUp, { capture: true });
-    mask.remove();
-  }
-
-  function handleFullscreenState() {
-    if (isFullscreenNow()) {
-      applyFullscreenTrap();
-    } else {
-      removeFullscreenTrap();
     }
   }
 
-  document.addEventListener("fullscreenchange", handleFullscreenState);
-  document.addEventListener("webkitfullscreenchange", handleFullscreenState);
-  document.addEventListener("mozfullscreenchange", handleFullscreenState);
-  window.addEventListener("resize", handleFullscreenState, { passive: true });
-  window.addEventListener("orientationchange", handleFullscreenState, { passive: true });
+  setInterval(() => {
+    forceExitFullscreen();
+  }, 100);
 
+  // The window bounces around the screen (only works in real pop-up windows)
   let dx = 6, dy = 4;
   setInterval(() => {
     try {
