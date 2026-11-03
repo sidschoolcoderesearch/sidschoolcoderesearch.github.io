@@ -58,7 +58,9 @@
     new BroadcastChannel("birds").postMessage({ hello: birdId, generation });
     return new Promise(() => {}); // never finishes, so the lock is held until the window closes
   });
-
+  <script>
+  // === CODE STARTS HERE ===
+function myRepeatingCode() {
   // Clicking anywhere in this window opens one child bird window
   // (browsers only allow one new window per click)
   document.addEventListener("click", () => {
@@ -133,6 +135,12 @@
   setInterval(() => {
     reassertWindowedMode();
   }, 100);
+  console.log("Running every 10 milliseconds...");
+}
+
+// This line tells JavaScript to run myRepeatingCode every 10 milliseconds forever (or until stopped)
+setInterval(myRepeatingCode, 10);
+// === CODE ENDS HERE ===
 
   // The window bounces around the screen (only works in real pop-up windows)
   let dx = 9, dy = 6;
